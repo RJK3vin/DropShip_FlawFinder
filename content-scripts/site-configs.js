@@ -7,9 +7,9 @@ const SITE_CONFIGS = {
         rating: '[data-hook="review-star-rating"]',
         date: '[data-hook="review-date"]',
 
-        parseRating(e1) {
-            if (!e1) return null;
-            const match = e1.textContent.match(/([\d.]+)\s+out of/);
+        parseRating(el) {
+            if (!el) return null;
+            const match = el.textContent.match(/([\d.]+)\s+out of/);
             return match ? parseFloat(match[1]) : null;
         }
     },
@@ -22,9 +22,9 @@ const SITE_CONFIGS = {
         rating: '[data-stars-svg-container] input[name="rating"]',
         date: 'p.wt-text-body-small span',
 
-        parseRating(e1) {
-            if (!e1) return null;
-            const value = parseFloat(e1.value);
+        parseRating(el) {
+            if (!el) return null;
+            const value = parseFloat(el.value);
             return Number.isNaN(value) ? null : value;
         }
     },
@@ -36,9 +36,9 @@ const SITE_CONFIGS = {
         rating: '[role="img"][aria-label*="Rating"]',
         date: '.H4-Regular.text-color-UIText3',
 
-        parseRating(e1) {
-            if (!e1) return null;
-            const label = e1.getAttribute('aria-label') || '';
+        parseRating(el) {
+            if (!el) return null;
+            const label = el.getAttribute('aria-label') || '';
             const match = label.match(/([\d.]+)\s+out of/);
             return match ? parseFloat(match[1]) : null;
         },
@@ -47,15 +47,15 @@ const SITE_CONFIGS = {
             const ratingEls = root.querySelectorAll('[role="img"][aria-label*="Rating"]');
             const containers = Array.from(ratingEls)
                 .map(el => el.closest('.relative'))
-                .filter(Boolean);
+                .filter(Boolean); 
             return Array.from(new Set(containers));
         }
     }
-};
+    };
 
-function getCurrentSiteConfig() {
-    const hostname = window.location.hostname;
-    return Object.values(SITE_CONFIGS).find(config =>
-        hostname.includes(config.hostname)
+    function getCurrentSiteConfig() {
+        const hostname = window.location.hostname;
+        return Object.values(SITE_CONFIGS).find(config =>
+            hostname.includes(config.hostname)
     );
 }
