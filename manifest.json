@@ -1,0 +1,38 @@
+{
+    "manifest_version": 3,
+    "name": "DropShip FlawFinder",
+    "version": "0.1.0",
+    "description": "Find product weaknesses from low-star reviews and turn them into ad hooks.",
+    "permissions": [
+        "storage"
+    ],
+    "host_permissions": [
+        "https://www.amazon.com/*",
+        "https://www.etsy.com/*",
+        "https://shop.tiktok.com/*"
+    ],
+    "background": {
+        "service_worker": "background/service-service_worker.js"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "https://www.amazon.com/*",
+                "https://www.etsy.com/*",
+                "https://shop.tiktok.com/*"
+            ],
+            "js": [
+                "content-scripts/site-configs.js",
+                "content-scripts/scraper.js"
+            ],
+            "css": [
+                "content-scripts/content.css"
+            ],
+            "run_at": "document_idle"
+        }
+    ],
+    "action": {
+        "default_popup": "popup/popup.html",
+        "default_title": "DropShip FlawFinder"
+    }
+}
