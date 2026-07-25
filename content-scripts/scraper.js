@@ -13,8 +13,22 @@ function injectAnalyzeButton() {
     button.id = 'flawfinder-btn';
     button.textContent = '🔍 Analyze Flaws';
 
-    button.addEventListener('click', handleAnalyzeClick);
+    Object.assign(button.style, {
+        position: 'fixed',
+        bottom: '20px',
+        right: '20px',
+        zIndex: '999999',
+        padding: '12px 18px',
+        backgroundColor: '#2563eb',
+        color: '#ffffff',
+        border: 'none',
+        borderRadius: '8px',
+        cursor: 'pointer',
+        fontWeight: 'bold',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+    });
 
+    button.addEventListener('click', handleAnalyzeClick);
     document.body.appendChild(button);
 }
 
