@@ -1,4 +1,5 @@
 const contentEl = document.getElementById('content');
+let currentReviews = [];
 
 chrome.storage.local.get('flawfinder_lastScan', (result) => {
     const reviews = result.flawfinder_lastScan;
@@ -8,6 +9,7 @@ chrome.storage.local.get('flawfinder_lastScan', (result) => {
         return;
     }
 
+    currentReviews = reviews;
     renderReviews(reviews);
 });
 
@@ -28,7 +30,17 @@ function renderReviews(reviews) {
     `;
 
     const cardsHtml = reviews.map(renderReviewCard).join('');
-    contentEl.innerHTML = summaryHtml + cardsHtml;
+    
+    const actionHtml = `
+        <button id="generate-hooks-btn" class="primary-btn">
+            ✨ Generate Ad Hooks
+        </button>
+        <div id="hooks-output"></div>
+    `;
+    
+    contentEl.innerHTML = summaryHtml + cardsHtml + actionHtml;
+
+    document.getElementById('generate-hooks-btn').addEventListener('click', handleGenerateHooksClick);
 }
 
 function renderReviewCard(review) {
@@ -39,6 +51,48 @@ function renderReviewCard(review) {
                 <span class="review-date">${escapeHtml(review.date || '')}</span>
             </div>
             <div class="review-text">${escapeHtml(review.text || '(no text)')}</div>
+        </div>
+    `;
+}
+
+function handleGenerateHooksClick() {
+    const button = document.getElementById('generate-hooks-btn');
+    const outputEl = document.getElementById('hooks-output');
+    
+    button.disabled = true;
+    button.textContent = 'Analyzing...';
+    outputEl.innerHTML = `<div class="loading-note">This can take a few seconds — longer the first time, while Gemini Nano downloads.</div>`;
+    
+    chrome.runtime.sendMessage(
+        { type: 'ANALYZE_REVIEWS', reviews: currentReviews },
+        (response) => {
+            button.disabled = false;
+            button.textContent = '✨ Generate Ad Hooks';
+        
+            if (!response || !response.success) {
+                const errorMsg = response ? response.error : 'Unknown error — no response from background script.';
+                outputEl.innerHTML = `<div class="error-note">Couldn't generate hooks: ${escapeHtml(errorMsg)}</div>`;
+                return;
+            }
+            renderHooks(response.data, outputEl);
+        }
+    );
+}
+ 
+function renderHooks(defects, outputEl) {
+    if (!defects || defects.length === 0) {
+        outputEl.innerHTML = `<div class="loading-note">No clear recurring defects found in this batch of reviews.</div>`;
+        return;
+    }
+    
+    outputEl.innerHTML = defects.map(renderHookCard).join('');
+}
+ 
+function renderHookCard(defect) {
+    return `
+        <div class="hook-card">
+            <div class="hook-defect">${escapeHtml(defect.defect)} <span class="hook-count">(${defect.mentionCount} mentions)</span></div>
+            <div class="hook-text">"${escapeHtml(defect.adHook)}"</div>
         </div>
     `;
 }

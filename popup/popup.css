@@ -104,3 +104,70 @@ body {
 .summary-bar strong {
     color: var(--text);
 }
+
+.primary-btn {
+    width: 100%;
+    padding: 10px;
+    margin-top: 4px;
+    background: var(--accent);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+ 
+.primary-btn:hover {
+    background: var(--accent-dark);
+}
+ 
+.primary-btn:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+ 
+.loading-note,
+.error-note {
+    margin-top: 10px;
+    font-size: 12px;
+    padding: 10px;
+    border-radius: 8px;
+    line-height: 1.4;
+}
+ 
+.loading-note {
+    color: var(--text-muted);
+    background: var(--bg-muted);
+}
+ 
+.error-note {
+    color: #991b1b;
+    background: #fef2f2;
+}
+ 
+.hook-card {
+    margin-top: 8px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: #eff6ff;
+}
+ 
+.hook-defect {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent-dark);
+    margin-bottom: 4px;
+}
+ 
+.hook-count {
+    font-weight: 400;
+    color: var(--text-muted);
+}
+ 
+.hook-text {
+    font-size: 13px;
+    font-style: italic;
+    line-height: 1.4;
+}
