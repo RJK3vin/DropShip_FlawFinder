@@ -63,6 +63,50 @@ function handleAnalyzeClick() {
     console.log(`[FlawFinder] Found ${negativeReviews.length} negative reviews (1-3 stars):`, negativeReviews);
 
     chrome.storage.local.set({ flawfinder_lastScan: negativeReviews });
+
+    showToast(
+        negativeReviews.length > 0
+        ? `✅ Found ${reviews.length} reviews — ${negativeReviews.length} are 1-3★. Click the extension icon to view.`
+        : `✅ Scanned ${reviews.length} reviews — none currently loaded are 1-3★.`
+    );
+}
+
+function showToast(message) {
+    let toast = document.getElementById('flawfinder-toast');
+    
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'flawfinder-toast';
+    
+        Object.assign(toast.style, {
+        position: 'fixed',
+        bottom: '78px',
+        right: '20px',
+        zIndex: '2147483647',
+        maxWidth: '280px',
+        padding: '10px 14px',
+        backgroundColor: '#1e293b',
+        color: '#ffffff',
+        borderRadius: '8px',
+        fontSize: '13px',
+        lineHeight: '1.4',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+        transition: 'opacity 0.3s ease',
+        opacity: '0'
+        });
+    
+        document.body.appendChild(toast);
+    }
+    
+    toast.textContent = message;
+    
+    if (toast._hideTimeout) clearTimeout(toast._hideTimeout);
+    
+    requestAnimationFrame(() => { toast.style.opacity = '1'; });
+    
+    toast._hideTimeout = setTimeout(() => {
+        toast.style.opacity = '0';
+    }, 4000);
 }
 
 function scrapeReviews(config) {
