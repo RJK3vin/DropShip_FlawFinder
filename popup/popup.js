@@ -1,5 +1,10 @@
 const contentEl = document.getElementById('content');
+const subscriptionEl = document.getElementById('subscription-section');
 let currentReviews = [];
+
+const WORKER_URL = 'https://dropship-flawfinder.flawfinder-api.workers.dev';
+
+renderSubscriptionSection();
 
 chrome.storage.local.get('flawfinder_lastScan', (result) => {
     const reviews = result.flawfinder_lastScan;
@@ -108,4 +113,73 @@ function escapeHtml(str) {
     const div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;
+}
+
+function renderSubscriptionSection() {
+    chrome.storage.local.get(
+        ['flawfinder_subscribed', 'flawfinder_subscriberEmail'],
+        (result) => {
+            if (result.flawfinder_subscribed) {
+                subscriptionEl.innerHTML = `
+                    <div class="sub-status sub-active">
+                        ✓ Unlimited scans active (${escapeHtml(result.flawfinder_subscriberEmail || '')})
+                    </div>
+                `;
+                return;
+            }
+        
+        subscriptionEl.innerHTML = `
+            <div class="sub-status">
+                <span class="sub-label">Already paid? Verify your email:</span>
+                <div class="sub-verify-row">
+                    <input type="email" id="sub-email-input" placeholder="you@example.com" />
+                    <button id="sub-verify-btn">Verify</button>
+                </div>
+                <div id="sub-verify-message"></div>
+            </div>
+        `;
+    
+        document.getElementById('sub-verify-btn')
+            .addEventListener('click', handleVerifyClick);
+        }
+    );
+}
+ 
+async function handleVerifyClick() {
+    const input = document.getElementById('sub-email-input');
+    const button = document.getElementById('sub-verify-btn');
+    const messageEl = document.getElementById('sub-verify-message');
+    const email = input.value.trim();
+    
+    if (!email) {
+        messageEl.textContent = 'Enter the email you paid with.';
+        return;
+    }
+    
+    button.disabled = true;
+    button.textContent = '...';
+    messageEl.textContent = '';
+    
+    try {
+        const response = await fetch(
+            `${WORKER_URL}/verify?email=${encodeURIComponent(email)}`
+        );
+        const data = await response.json();
+    
+        if (data.subscribed) {
+            await chrome.storage.local.set({
+                flawfinder_subscribed: true,
+                flawfinder_subscriberEmail: email
+            });
+        renderSubscriptionSection();
+        } else {
+            messageEl.textContent = 'No active subscription found for that email.';
+            button.disabled = false;
+            button.textContent = 'Verify';
+        }
+    } catch (err) {
+        messageEl.textContent = 'Could not reach the server — try again shortly.';
+        button.disabled = false;
+        button.textContent = 'Verify';
+    }
 }

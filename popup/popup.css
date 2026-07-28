@@ -171,3 +171,57 @@ body {
     font-style: italic;
     line-height: 1.4;
 }
+
+#subscription-section {
+    border-top: 1px solid var(--border);
+    padding: 10px 14px;
+    background: var(--bg-muted);
+}
+ 
+.sub-status.sub-active {
+    font-size: 12px;
+    font-weight: 700;
+    color: #16a34a;
+}
+ 
+.sub-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    display: block;
+    margin-bottom: 6px;
+}
+ 
+.sub-verify-row {
+    display: flex;
+    gap: 6px;
+}
+ 
+.sub-verify-row input {
+    flex: 1;
+    padding: 6px 8px;
+    font-size: 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+}
+ 
+.sub-verify-row button {
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #ffffff;
+    background: var(--accent);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+ 
+.sub-verify-row button:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+ 
+#sub-verify-message {
+    font-size: 11px;
+    color: #991b1b;
+    margin-top: 6px;
+}

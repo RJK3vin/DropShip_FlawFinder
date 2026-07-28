@@ -1,0 +1,7 @@
+name = "dropship-flawfinder"
+main = "worker.js"
+compatibility_date = "2026-01-01"
+ 
+[[kv_namespaces]]
+binding = "SUBSCRIBERS"
+id = "5b31f2390bd84ddfbd23596e8b3a886e"
