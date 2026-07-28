@@ -1,3 +1,8 @@
+const FREE_DAILY_SCAN_LIMIT = 3;
+
+const STRIPE_PAYMENT_LINK_URL = 'https://buy.stripe.com/test_9B600i2Nf2AEddZ8051wY00'
+
+
 document.addEventListener('click', (event) => {
     if (event.target && event.target.id === 'flawfinder-btn') {
         event.preventDefault();
@@ -46,9 +51,21 @@ function injectAnalyzeButton() {
     document.body.appendChild(button);
 }
 
-function handleAnalyzeClick() {
+async function handleAnalyzeClick() {
     console.log('[FlawFinder] Button clicked!');
     
+    const scanCheck = await checkAndIncrementScanCount();
+
+    if (!scanCheck.allowed) {
+        showToast(
+            `You've used all ${FREE_DAILY_SCAN_LIMIT} free scans today. ` +
+            `<a href="${STRIPE_PAYMENT_LINK_URL}" target="_blank" ` +
+            `style="color:#93c5fd;text-decoration:underline;">Upgrade for unlimited →</a>`,
+            { persistent: true }
+        );
+        return;
+    }
+
     const currentConfig = getCurrentSiteConfig();
     if (!currentConfig) {
         console.error('[FlawFinder] No site config matched current URL.');
@@ -64,15 +81,52 @@ function handleAnalyzeClick() {
 
     chrome.storage.local.set({ flawfinder_lastScan: negativeReviews });
 
+    const remainingNote = scanCheck.subscribed
+        ? ''
+        : ` (${scanCheck.remaining} free scan${scanCheck.remaining === 1 ? '' : 's'} left today)`;
+
     showToast(
         negativeReviews.length > 0
-        ? `✅ Found ${reviews.length} reviews — ${negativeReviews.length} are 1-3★. Click the extension icon to view.`
-        : `✅ Scanned ${reviews.length} reviews — none currently loaded are 1-3★.`
+        ? `✅ Found ${reviews.length} reviews — ${negativeReviews.length} are 1-3★. Click the extension icon to view.${remainingNote}`
+        : `✅ Scanned ${reviews.length} reviews — none currently loaded are 1-3★.${remainingNote}`
     );
 }
 
-function showToast(message) {
+async function checkAndIncrementScanCount() {
+    const stored = await chrome.storage.local.get([
+        'flawfinder_scanState',
+        'flawfinder_subscribed'
+    ]);
+
+    if (stored.flawfinder_subscribed) {
+        return { allowed: true, remaining: Infinity, subscribed: true };
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+    const scanState = stored.flawfinder_scanState;
+
+    const currentCount = (scanState && scanState.date === today) ? scanState.count : 0;
+
+    if (currentCount >= FREE_DAILY_SCAN_LIMIT) {
+        return { allowed: false, remaining: 0, subscribed: false };
+    }
+
+    const newCount = currentCount + 1;
+    await chrome.storage.local.set({
+        flawfinder_scanState: { date: today, count: newCount }
+    });
+
+    return {
+        allowed: true, 
+        remaining: FREE_DAILY_SCAN_LIMIT - newCount,
+        subscribed: false
+    };
+}
+
+function showToast(message, options = {}) {
+    const { persistent = false } = options;
     let toast = document.getElementById('flawfinder-toast');
+    
     
     if (!toast) {
         toast = document.createElement('div');
@@ -84,7 +138,7 @@ function showToast(message) {
         right: '20px',
         zIndex: '2147483647',
         maxWidth: '280px',
-        padding: '10px 14px',
+        padding: '10px 14px 10px 14px',
         backgroundColor: '#1e293b',
         color: '#ffffff',
         borderRadius: '8px',
@@ -98,15 +152,29 @@ function showToast(message) {
         document.body.appendChild(toast);
     }
     
-    toast.textContent = message;
-    
-    if (toast._hideTimeout) clearTimeout(toast._hideTimeout);
-    
-    requestAnimationFrame(() => { toast.style.opacity = '1'; });
-    
-    toast._hideTimeout = setTimeout(() => {
+    toast.innerHTML = `
+        ${message}
+        <span id="flawfinder-toast-close" style="
+            position: absolute; top: 6px; right: 10px;
+            cursor: pointer; font-weight: bold; opacity: 0.7;
+        ">✕</span>
+    `;
+    toast.style.position = 'fixed';
+
+    document.getElementById('flawfinder-toast-close').addEventListener('click', () => {
         toast.style.opacity = '0';
-    }, 4000);
+        if (toast._hideTimeout) clearTimeout(toast._hideTimeout);
+    });
+ 
+    if (toast._hideTimeout) clearTimeout(toast._hideTimeout);
+ 
+    requestAnimationFrame(() => { toast.style.opacity = '1'; });
+ 
+    if (!persistent) {
+        toast._hideTimeout = setTimeout(() => {
+            toast.style.opacity = '0';
+        }, 6000);
+    }
 }
 
 function scrapeReviews(config) {
