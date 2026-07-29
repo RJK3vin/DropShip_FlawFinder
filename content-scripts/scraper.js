@@ -32,21 +32,7 @@ function injectAnalyzeButton() {
     button.id = 'flawfinder-btn';
     button.textContent = '🔍 Analyze Flaws';
 
-    Object.assign(button.style, {
-        position: 'fixed',
-        bottom: '20px',
-        right: '20px',
-        zIndex: '2147483647', 
-        padding: '12px 18px',
-        backgroundColor: '#2563eb',
-        color: '#ffffff',
-        border: 'none',
-        borderRadius: '8px',
-        cursor: 'pointer',
-        fontWeight: 'bold',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-        pointerEvents: 'auto' 
-    });
+    button.className = 'ff-btn';
 
     document.body.appendChild(button);
 }
@@ -59,8 +45,7 @@ async function handleAnalyzeClick() {
     if (!scanCheck.allowed) {
         showToast(
             `You've used all ${FREE_DAILY_SCAN_LIMIT} free scans today. ` +
-            `<a href="${STRIPE_PAYMENT_LINK_URL}" target="_blank" ` +
-            `style="color:#93c5fd;text-decoration:underline;">Upgrade for unlimited →</a>`,
+            `<a href="${STRIPE_PAYMENT_LINK_URL}" target="_blank">Upgrade for unlimited →</a>`,
             { persistent: true }
         );
         return;
@@ -132,34 +117,15 @@ function showToast(message, options = {}) {
         toast = document.createElement('div');
         toast.id = 'flawfinder-toast';
     
-        Object.assign(toast.style, {
-        position: 'fixed',
-        bottom: '78px',
-        right: '20px',
-        zIndex: '2147483647',
-        maxWidth: '280px',
-        padding: '10px 14px 10px 14px',
-        backgroundColor: '#1e293b',
-        color: '#ffffff',
-        borderRadius: '8px',
-        fontSize: '13px',
-        lineHeight: '1.4',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-        transition: 'opacity 0.3s ease',
-        opacity: '0'
-        });
-    
+        toast.className = 'ff-toast';
+        
         document.body.appendChild(toast);
     }
     
     toast.innerHTML = `
         ${message}
-        <span id="flawfinder-toast-close" style="
-            position: absolute; top: 6px; right: 10px;
-            cursor: pointer; font-weight: bold; opacity: 0.7;
-        ">✕</span>
+        <span id="flawfinder-toast-close" class="ff-toast-close">✕</span>
     `;
-    toast.style.position = 'fixed';
 
     document.getElementById('flawfinder-toast-close').addEventListener('click', () => {
         toast.style.opacity = '0';

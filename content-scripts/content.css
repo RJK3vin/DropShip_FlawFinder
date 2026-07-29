@@ -1,0 +1,57 @@
+.ff-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 2147483647; /* max safe z-index — stays above host page content */
+    padding: 12px 18px;
+    background-color: #2563eb;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 14px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    pointer-events: auto;
+}
+
+.ff-btn:hover {
+    background-color: #1e40af;
+}
+
+.ff-toast {
+    position: fixed;
+    bottom: 78px;
+    right: 20px;
+    z-index: 2147483647;
+    max-width: 280px;
+    padding: 10px 30px 10px 14px; /* extra right padding clears the close button */
+    background-color: #1e293b;
+    color: #ffffff;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.4;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: opacity 0.3s ease;
+    opacity: 0;
+}
+
+.ff-toast-close {
+    position: absolute;
+    top: 6px;
+    right: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    opacity: 0.7;
+    }
+
+.ff-toast-close:hover {
+    opacity: 1;
+}
+
+.ff-toast a {
+    color: #93c5fd;
+    text-decoration: underline;
+}
