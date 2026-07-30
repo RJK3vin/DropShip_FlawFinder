@@ -4,36 +4,41 @@ let currentReviews = [];
 
 const WORKER_URL = 'https://dropship-flawfinder.flawfinder-api.workers.dev';
 
-renderSubscriptionSection();
+const REVERIFY_INTERVAL_MS = 3 * 24 * 60 * 60 * 1000;
 
+renderSubscriptionSection();
+ 
 chrome.storage.local.get('flawfinder_lastScan', (result) => {
     const reviews = result.flawfinder_lastScan;
-
+    
     if (!reviews || reviews.length === 0) {
         renderEmptyState();
         return;
     }
-
+    
     currentReviews = reviews;
     renderReviews(reviews);
-});
-
+    }
+);
+ 
 function renderEmptyState() {
     contentEl.innerHTML = `
         <div class="empty-state">
             <div class="empty-icon">🔍</div>
-                <p>No scan yet. Visit a product page on Amazon, Etsy, or TikTok Shop and click <strong>Analyze Flaws</strong> to get started.</p>
+            <p>No scan yet. Visit a product page on Amazon, Etsy, or TikTok
+            Shop and click <strong>Analyze Flaws</strong> to get started.</p>
         </div>
-    `;
+  `;
 }
-
+ 
 function renderReviews(reviews) {
     const summaryHtml = `
         <div class="summary-bar">
-            Found <strong>${reviews.length}</strong> low-rated review${reviews.length === 1 ? '' : 's'} from your last scan.
+            Found <strong>${reviews.length}</strong> low-rated review${reviews.length === 1 ? '' : 's'}
+            from your last scan.
         </div>
     `;
-
+ 
     const cardsHtml = reviews.map(renderReviewCard).join('');
     
     const actionHtml = `
@@ -44,10 +49,10 @@ function renderReviews(reviews) {
     `;
     
     contentEl.innerHTML = summaryHtml + cardsHtml + actionHtml;
-
+    
     document.getElementById('generate-hooks-btn').addEventListener('click', handleGenerateHooksClick);
 }
-
+ 
 function renderReviewCard(review) {
     return `
         <div class="review-card">
@@ -59,7 +64,7 @@ function renderReviewCard(review) {
         </div>
     `;
 }
-
+ 
 function handleGenerateHooksClick() {
     const button = document.getElementById('generate-hooks-btn');
     const outputEl = document.getElementById('hooks-output');
@@ -79,6 +84,7 @@ function handleGenerateHooksClick() {
                 outputEl.innerHTML = `<div class="error-note">Couldn't generate hooks: ${escapeHtml(errorMsg)}</div>`;
                 return;
             }
+        
             renderHooks(response.data, outputEl);
         }
     );
@@ -101,48 +107,72 @@ function renderHookCard(defect) {
         </div>
     `;
 }
-
+ 
 function starString(rating) {
     const rounded = Math.round(rating || 0);
     const filled = '★'.repeat(rounded);
     const empty = '☆'.repeat(5 - rounded);
     return filled + empty;
 }
-
+ 
 function escapeHtml(str) {
     const div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;
 }
-
+ 
 function renderSubscriptionSection() {
     chrome.storage.local.get(
-        ['flawfinder_subscribed', 'flawfinder_subscriberEmail'],
-        (result) => {
+        ['flawfinder_subscribed', 'flawfinder_subscriberEmail', 'flawfinder_subscriptionVerifiedAt'],
+        async (result) => {
             if (result.flawfinder_subscribed) {
+                const verifiedAt = result.flawfinder_subscriptionVerifiedAt || 0;
+                const isStale = Date.now() - verifiedAt > REVERIFY_INTERVAL_MS;
+        
+                if (isStale && result.flawfinder_subscriberEmail) {
+                
+                    const stillSubscribed = await verifyEmail(result.flawfinder_subscriberEmail);
+            
+                    await chrome.storage.local.set({
+                        flawfinder_subscribed: stillSubscribed,
+                        flawfinder_subscriptionVerifiedAt: Date.now()
+                    });
+            
+                    if (!stillSubscribed) {
+                        renderSubscriptionSection(); 
+                        return;
+                    }
+                }
                 subscriptionEl.innerHTML = `
                     <div class="sub-status sub-active">
                         ✓ Unlimited scans active (${escapeHtml(result.flawfinder_subscriberEmail || '')})
                     </div>
-                `;
+                    `;
                 return;
             }
-        
-        subscriptionEl.innerHTML = `
-            <div class="sub-status">
-                <span class="sub-label">Already paid? Verify your email:</span>
-                <div class="sub-verify-row">
-                    <input type="email" id="sub-email-input" placeholder="you@example.com" />
-                    <button id="sub-verify-btn">Verify</button>
-                </div>
-                <div id="sub-verify-message"></div>
-            </div>
-        `;
     
-        document.getElementById('sub-verify-btn')
-            .addEventListener('click', handleVerifyClick);
+            subscriptionEl.innerHTML = `
+                <div class="sub-status">
+                    <span class="sub-label">Already paid? Verify your email:</span>
+                    <div class="sub-verify-row">
+                        <input type="email" id="sub-email-input" placeholder="you@example.com" />
+                        <button id="sub-verify-btn">Verify</button>
+                    </div>
+                    <div id="sub-verify-message"></div>
+                </div>
+            `;
+        
+            document.getElementById('sub-verify-btn').addEventListener('click', handleVerifyClick);
         }
     );
+}
+ 
+async function verifyEmail(email) {
+    const response = await fetch(
+        `${WORKER_URL}/verify?email=${encodeURIComponent(email)}`
+    );
+    const data = await response.json();
+    return !!data.subscribed;
 }
  
 async function handleVerifyClick() {
@@ -161,17 +191,15 @@ async function handleVerifyClick() {
     messageEl.textContent = '';
     
     try {
-        const response = await fetch(
-            `${WORKER_URL}/verify?email=${encodeURIComponent(email)}`
-        );
-        const data = await response.json();
+        const subscribed = await verifyEmail(email);
     
-        if (data.subscribed) {
+        if (subscribed) {
             await chrome.storage.local.set({
                 flawfinder_subscribed: true,
-                flawfinder_subscriberEmail: email
+                flawfinder_subscriberEmail: email,
+                flawfinder_subscriptionVerifiedAt: Date.now()
             });
-        renderSubscriptionSection();
+            renderSubscriptionSection();
         } else {
             messageEl.textContent = 'No active subscription found for that email.';
             button.disabled = false;
