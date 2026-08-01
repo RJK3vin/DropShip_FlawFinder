@@ -183,6 +183,14 @@ body {
     font-weight: 700;
     color: #16a34a;
 }
+
+.sub-manage-link {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--text-muted);
+  text-decoration: underline;
+}
  
 .sub-label {
     font-size: 11px;

@@ -6,6 +6,8 @@ const WORKER_URL = 'https://dropship-flawfinder.flawfinder-api.workers.dev';
 
 const REVERIFY_INTERVAL_MS = 3 * 24 * 60 * 60 * 1000;
 
+const STRIPE_CUSTOMER_PORTAL_URL = 'https://billing.stripe.com/p/login/test_9B600i2Nf2AEddZ8051wY00'
+
 renderSubscriptionSection();
  
 chrome.storage.local.get('flawfinder_lastScan', (result) => {
@@ -147,7 +149,10 @@ function renderSubscriptionSection() {
                     <div class="sub-status sub-active">
                         ✓ Unlimited scans active (${escapeHtml(result.flawfinder_subscriberEmail || '')})
                     </div>
-                    `;
+                    <a href="${STRIPE_CUSTOMER_PORTAL_URL}" target="_blank" class="sub-manage-link">
+                        Manage / cancel subscription →
+                    </a>
+                `;
                 return;
             }
     
