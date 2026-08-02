@@ -6,7 +6,7 @@ const WORKER_URL = 'https://dropship-flawfinder.flawfinder-api.workers.dev';
 
 const REVERIFY_INTERVAL_MS = 3 * 24 * 60 * 60 * 1000;
 
-const STRIPE_CUSTOMER_PORTAL_URL = 'https://billing.stripe.com/p/login/test_9B600i2Nf2AEddZ8051wY00'
+const STRIPE_CUSTOMER_PORTAL_URL = 'https://billing.stripe.com/p/login/aFafZg1Rn5ko4518tw43S00'
 
 renderSubscriptionSection();
  

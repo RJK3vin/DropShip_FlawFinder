@@ -1,6 +1,6 @@
 const FREE_DAILY_SCAN_LIMIT = 3;
 
-const STRIPE_PAYMENT_LINK_URL = 'https://buy.stripe.com/test_9B600i2Nf2AEddZ8051wY00'
+const STRIPE_PAYMENT_LINK_URL = 'https://buy.stripe.com/aFafZg1Rn5ko4518tw43S00'
 
 
 document.addEventListener('click', (event) => {
