@@ -31,8 +31,9 @@ model — no API keys, no per-scan cost, nothing sent to a server.
 1. Install **DropShip FlawFinder** from the [Chrome Web Store](#)
 2. Pin it to your toolbar (optional, but handy)
 3. Visit any product page on Amazon, Etsy, or TikTok Shop
-4. Click the **Analyze Flaws** button that appears on the page
-5. Click the extension icon to see the results and generate ad hooks
+4. Use the site's own star filter to show only 1–3 star reviews
+5. Click the **Analyze Flaws** button that appears on the page
+6. Click the extension icon to see the results and generate ad hooks
 
 That's it — no account required for the free tier (3 scans/day).
 Unlimited scans are $9/mo via Stripe, cancel anytime.
