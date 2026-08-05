@@ -1,38 +1,40 @@
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+// Handles local AI processing
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => { // listens for msgs from popup or scraper
     if (message.type === 'ANALYZE_REVIEWS') {
         analyzeReviews(message.reviews)
         .then(result => sendResponse({ success: true, data: result }))
         .catch(error => sendResponse({ success: false, error: error.message }));
         return true;
-    }
+    } // send reponse will be called asynchronously after the promise completes 
 });
 
 async function analyzeReviews(reviews) {
-    await ensureModelAvailable();
+    await ensureModelAvailable(); // is Gemini Nano supported and ready on device
 
-    const session = await LanguageModel.create();
+    const session = await LanguageModel.create(); // initialize AI session
 
     try {
-        const defects = await clusterDefects(session, reviews);
-        const withHooks = await generateAdHooks(session, defects);
+        const defects = await clusterDefects(session, reviews); // group low-star reviews into common product flaws
+        const withHooks = await generateAdHooks(session, defects); // create marketing copy fixing those flaws
         return withHooks;
     } finally {
-        session.destroy();
+        session.destroy(); // guarantees local AI session memory is freed
     }
 }
 
-async function ensureModelAvailable() {
-    if (typeof LanguageModel === 'undefined') {
-        throw new Error(
+async function ensureModelAvailable() { // checks if browser or device supports Gemini Nano
+    if (typeof LanguageModel === 'undefined') { // Checks to see if an AI feature is supported by the web browser
+        throw new Error( // throw error if not available in this browser
             'Gemini Nano is not available in this browser. Requires a recent ' +
             'version of Chrome with the built-in AI model enabled.'
         );
     }
 
-    const availability = await LanguageModel.availability();
+    const availability = await LanguageModel.availability(); // asks your browser or device if the local AI model can be used right now
     const unavailableValues = ['no', 'unavailable'];
 
-    if (unavailableValues.includes(availability)) {
+    if (unavailableValues.includes(availability)) { // if not throw error
         throw new Error(
             'Gemini Nano is unavailable on this device (unsupported hardware ' +
             'or not enough free storage for the model).'
@@ -41,12 +43,12 @@ async function ensureModelAvailable() {
 }
 
 async function clusterDefects(session, reviews) {
-    const reviewText = reviews
+    const reviewText = reviews // Ex: 1. (2★) Zipper snapped on day 2
         .map((r, i) => `${i + 1}. (${r.rating}★) ${r.text}`)
         .filter(line => line.trim().length > 0)
         .join('\n');
 
-    const schema = {
+    const schema = { // forces Gemini Nano to return JSON stricly to this structure
         type: 'array',
         items: {
             type: 'object',
@@ -71,14 +73,14 @@ async function clusterDefects(session, reviews) {
     Reviews:
     ${reviewText}`;
 
-    const result = await session.prompt(prompt, { responseConstraint: schema });
-    return JSON.parse(result);
+    const result = await session.prompt(prompt, { responseConstraint: schema }); // sends prompt to AI session with strict output rules
+    return JSON.parse(result); // Used to instantly convert that text string into a native JavaScript object or array
 }
 
 async function generateAdHooks(session, defects) {
     const results = [];
 
-    for (const defect of defects) {
+    for (const defect of defects) { // goes thru each extracted defect
         const prompt = `A competing product has this common customer
     complaint: "${defect.defect}" (example customer quote: "${defect.examplePhrase}").
 
@@ -86,12 +88,12 @@ async function generateAdHooks(session, defects) {
     Meta ad that positions OUR product as having fixed this exact flaw.
     Respond with ONLY the hook text, no quotation marks, no preamble.`;
 
-        const adHook = await session.prompt(prompt);
+        const adHook = await session.prompt(prompt); // prompts AI to send prompt to generate marketing hooks
 
-        results.push({
-        ...defect,
-        adHook: adHook.trim()
-        });
+        results.push({ // add new item to array
+        ...defect, // copy everything from defect object into this new one
+        adHook: adHook.trim() // Overrides adHook property or adds if it doesn't exist and cleans up leading and trailing whitespace
+        }); 
     }
 
     return results;

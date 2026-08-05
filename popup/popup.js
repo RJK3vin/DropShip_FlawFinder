@@ -10,10 +10,10 @@ const STRIPE_CUSTOMER_PORTAL_URL = 'https://billing.stripe.com/p/login/aFafZg1Rn
 
 renderSubscriptionSection();
  
-chrome.storage.local.get('flawfinder_lastScan', (result) => {
+chrome.storage.local.get('flawfinder_lastScan', (result) => {  // retrieve most recent scan
     const reviews = result.flawfinder_lastScan;
     
-    if (!reviews || reviews.length === 0) {
+    if (!reviews || reviews.length === 0) { // if empty or no recent scan show empty state
         renderEmptyState();
         return;
     }
@@ -31,7 +31,7 @@ function renderEmptyState() {
             Shop and click <strong>Analyze Flaws</strong> to get started.</p>
         </div>
   `;
-}
+} // no scan state
  
 function renderReviews(reviews) {
     const summaryHtml = `
@@ -39,20 +39,20 @@ function renderReviews(reviews) {
             Found <strong>${reviews.length}</strong> low-rated review${reviews.length === 1 ? '' : 's'}
             from your last scan.
         </div>
-    `;
+    `; // html for summary of scan
  
-    const cardsHtml = reviews.map(renderReviewCard).join('');
+    const cardsHtml = reviews.map(renderReviewCard).join(''); // all reviews as cards
     
     const actionHtml = `
         <button id="generate-hooks-btn" class="primary-btn">
             ✨ Generate Ad Hooks
         </button>
         <div id="hooks-output"></div>
-    `;
+    `; // html for ad hooks button
     
-    contentEl.innerHTML = summaryHtml + cardsHtml + actionHtml;
+    contentEl.innerHTML = summaryHtml + cardsHtml + actionHtml; // combine all together
     
-    document.getElementById('generate-hooks-btn').addEventListener('click', handleGenerateHooksClick);
+    document.getElementById('generate-hooks-btn').addEventListener('click', handleGenerateHooksClick); // waits for user to click generate add hooks button
 }
  
 function renderReviewCard(review) {
@@ -65,18 +65,18 @@ function renderReviewCard(review) {
             <div class="review-text">${escapeHtml(review.text || '(no text)')}</div>
         </div>
     `;
-}
+} // card displays rating, date, and text
  
 function handleGenerateHooksClick() {
     const button = document.getElementById('generate-hooks-btn');
     const outputEl = document.getElementById('hooks-output');
     
-    button.disabled = true;
+    button.disabled = true; // turns off button so user can't click it
     button.textContent = 'Analyzing...';
     outputEl.innerHTML = `<div class="loading-note">This can take a few seconds — longer the first time, while Gemini Nano downloads.</div>`;
     
-    chrome.runtime.sendMessage(
-        { type: 'ANALYZE_REVIEWS', reviews: currentReviews },
+    chrome.runtime.sendMessage( // send message to background
+        { type: 'ANALYZE_REVIEWS', reviews: currentReviews }, // the message
         (response) => {
             button.disabled = false;
             button.textContent = '✨ Generate Ad Hooks';
@@ -108,14 +108,14 @@ function renderHookCard(defect) {
             <div class="hook-text">"${escapeHtml(defect.adHook)}"</div>
         </div>
     `;
-}
+} // display add hook cards
  
 function starString(rating) {
     const rounded = Math.round(rating || 0);
     const filled = '★'.repeat(rounded);
     const empty = '☆'.repeat(5 - rounded);
     return filled + empty;
-}
+} // star ratings
  
 function escapeHtml(str) {
     const div = document.createElement('div');
@@ -124,24 +124,26 @@ function escapeHtml(str) {
 }
  
 function renderSubscriptionSection() {
-    chrome.storage.local.get(
-        ['flawfinder_subscribed', 'flawfinder_subscriberEmail', 'flawfinder_subscriptionVerifiedAt'],
+    chrome.storage.local.get( // reads data saved from extension
+        ['flawfinder_subscribed', // true or false
+        'flawfinder_subscriberEmail', // email
+        'flawfinder_subscriptionVerifiedAt'], // date & time since subscription was last verified
         async (result) => {
-            if (result.flawfinder_subscribed) {
+            if (result.flawfinder_subscribed) { // is user subscribed 
                 const verifiedAt = result.flawfinder_subscriptionVerifiedAt || 0;
-                const isStale = Date.now() - verifiedAt > REVERIFY_INTERVAL_MS;
+                const isStale = Date.now() - verifiedAt > REVERIFY_INTERVAL_MS; // longer than 3 days true or false if not longer
         
                 if (isStale && result.flawfinder_subscriberEmail) {
                 
-                    const stillSubscribed = await verifyEmail(result.flawfinder_subscriberEmail);
+                    const stillSubscribed = await verifyEmail(result.flawfinder_subscriberEmail); // recheck
             
                     await chrome.storage.local.set({
                         flawfinder_subscribed: stillSubscribed,
                         flawfinder_subscriptionVerifiedAt: Date.now()
-                    });
+                    }); // if verified subscribed: true, verifiedAt: today's date
             
-                    if (!stillSubscribed) {
-                        renderSubscriptionSection(); 
+                    if (!stillSubscribed) { // if not subscribed
+                        renderSubscriptionSection(); // re render but subscribed: false
                         return;
                     }
                 }
@@ -152,7 +154,7 @@ function renderSubscriptionSection() {
                     <a href="${STRIPE_CUSTOMER_PORTAL_URL}" target="_blank" class="sub-manage-link">
                         Manage / cancel subscription →
                     </a>
-                `;
+                `; // active subscription
                 return;
             }
     
@@ -165,18 +167,18 @@ function renderSubscriptionSection() {
                     </div>
                     <div id="sub-verify-message"></div>
                 </div>
-            `;
+            `; // user not subscribed display, asking to verify
         
-            document.getElementById('sub-verify-btn').addEventListener('click', handleVerifyClick);
+            document.getElementById('sub-verify-btn').addEventListener('click', handleVerifyClick); // if verified button is clicked
         }
     );
 }
  
 async function verifyEmail(email) {
-    const response = await fetch(
+    const response = await fetch( // send http request to worker url 
         `${WORKER_URL}/verify?email=${encodeURIComponent(email)}`
     );
-    const data = await response.json();
+    const data = await response.json(); // date = subscribed: true or false
     return !!data.subscribed;
 }
  
@@ -184,32 +186,33 @@ async function handleVerifyClick() {
     const input = document.getElementById('sub-email-input');
     const button = document.getElementById('sub-verify-btn');
     const messageEl = document.getElementById('sub-verify-message');
-    const email = input.value.trim();
+    const email = input.value.trim(); 
     
     if (!email) {
         messageEl.textContent = 'Enter the email you paid with.';
         return;
-    }
+    } // nothing was typed
     
     button.disabled = true;
     button.textContent = '...';
     messageEl.textContent = '';
-    
+    // disables button and shows waiting
+
     try {
-        const subscribed = await verifyEmail(email);
+        const subscribed = await verifyEmail(email); // verify email again
     
-        if (subscribed) {
+        if (subscribed) { // if true set chrome storage
             await chrome.storage.local.set({
                 flawfinder_subscribed: true,
                 flawfinder_subscriberEmail: email,
                 flawfinder_subscriptionVerifiedAt: Date.now()
             });
-            renderSubscriptionSection();
+            renderSubscriptionSection(); // re runs so popup shows unlimited subscriptions
         } else {
             messageEl.textContent = 'No active subscription found for that email.';
             button.disabled = false;
             button.textContent = 'Verify';
-        }
+        } // re enable verify button
     } catch (err) {
         messageEl.textContent = 'Could not reach the server — try again shortly.';
         button.disabled = false;

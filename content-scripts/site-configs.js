@@ -1,3 +1,5 @@
+// where to find review text, star ratings, and dates on each platform
+
 const SITE_CONFIGS = {
     amazon: {
         name: 'Amazon',
@@ -12,7 +14,7 @@ const SITE_CONFIGS = {
         if (!el) return null;
             const match = el.textContent.match(/([\d.]+)\s+out of/);
             return match ? parseFloat(match[1]) : null;
-        }
+        } // extract numeric rating and convert to float
     },
 
     etsy: {
@@ -24,15 +26,15 @@ const SITE_CONFIGS = {
         rating: 'input[name="rating"], [role="img"][aria-label*="out of 5"], [role="img"][aria-label*="Rating"], [aria-label*="stars"]',
         date: 'p.wt-text-body-small span, span.wt-text-body-small--tight',
 
-        parseRating(el) {
+        parseRating(el) { // 2 different etsy rating renders
         if (!el) return null;
 
-        if (el.tagName === 'INPUT') {
+        if (el.tagName === 'INPUT') { // <input value="1">
             const val = parseFloat(el.value);
             return Number.isNaN(val) ? null : val;
         }
 
-        const label = el.getAttribute('aria-label') || '';
+        const label = el.getAttribute('aria-label') || ''; // aria-label="1 out of 5 stars"
         const match = label.match(/([\d.]+)\s+out of/i);
         return match ? parseFloat(match[1]) : null;
         }
@@ -51,13 +53,13 @@ const SITE_CONFIGS = {
             const label = el.getAttribute('aria-label') || '';
             const match = label.match(/([\d.]+)\s+out of/);
             return match ? parseFloat(match[1]) : null;
-        }
+        }  // aria-label="1 out of 5 stars"
     }
 };
 
-function getCurrentSiteConfig() {
-    const hostname = window.location.hostname;
-    return Object.values(SITE_CONFIGS).find(config =>
+function getCurrentSiteConfig() { 
+    const hostname = window.location.hostname; // Inspects window.location.hostname of the page the browser is currently viewing
+    return Object.values(SITE_CONFIGS).find(config => // matches domain against SITE_CONFIGS and returns the relevant configuration object
         hostname.includes(config.hostname)
     );
 }
