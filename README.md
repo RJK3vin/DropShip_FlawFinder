@@ -28,7 +28,7 @@ model — no API keys, no per-scan cost, nothing sent to a server.
 
 ## How to use it
 
-1. Install **DropShip FlawFinder** from the [Chrome Web Store](#)
+1. Install **DropShip FlawFinder** from the [Chrome Web Store](https://chromewebstore.google.com/detail/dropship-flawfinder/gehabalafhimgcdmjabcgogdkibagckp?hl=en&authuser=0)
 2. Pin it to your toolbar (optional, but handy)
 3. Visit any product page on Amazon, Etsy, or TikTok Shop
 4. Use the site's own star filter to show only 1–3 star reviews
